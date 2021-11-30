@@ -91,11 +91,14 @@ module.exports = {
 ``` typescript: test-utils.ts
 import { FC, ReactElement } from 'react';
 import { render, RenderOptions, RenderResult } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { AppWrapper } from './app/AppWrapper';
+import { Provider, store, ThemeProvider, theme } from './providers';
 
 const AllTheProviders: FC = ({ children }) => (
-  <Provider store={store}><ThemeProvider theme={theme}>{children}</ThemeProvider></Provider>
+  <Provider store={store}>
+    <ThemeProvider theme={theme}>
+      {children}
+    </ThemeProvider>
+  </Provider>
 );
 
 const customRender = (ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>): RenderResult =>
@@ -111,9 +114,13 @@ export { customRender as render };
 
 ## ログインページのテスト
 
-ログインページでは、正しいEメールとパスワードが入力されていればログインができ、入力が正しくない場合はユーザーにエラーメッセージを出したいと思います。あと、デザイナーさんのこだわりで、「ユーザーがEメールアドレスとパスワードを入力するまではログインボタンは押せない状態になっている」という仕様も決まっているという想定です。
+ログインページでは、以下の仕様があるとします。
 
-こんな流れでテストしていきたいです。
+- 正しいEメールとパスワードが入力されていればログインができる
+- 入力が正しくない場合はユーザーにエラーメッセージを出す
+- ユーザーがEメールアドレスとパスワードを入力するまではログインボタンは押せない状態になっている
+
+次のような流れでテストしていきたいです。
 
 ``` typescript: Login.test.tsx
 import { render, waitFor } from '../../test-utils';
@@ -152,13 +159,13 @@ test('ログインページのテスト', () => {
 });
 ```
 
-ここでは、getUserIdFromCookie()の部分はあまり気にしないでください。認証は仮で作っています。
+ここでは、`getUserIdFromCookie`の部分は気にしないでください。認証は仮で作っています。
 
 ``` typescript
 expect(screen.getByRole('button')).toBeDisabled();
 ```
 
-の部分で、ログインページの中のボタン要素にアクセスして、ログインボタンの'disabled'プロパティがtrueになっていることを確認しています。
+の部分で、ログインページの中のボタン要素にアクセスして、ログインボタンの`disabled`プロパティが`true`になっていることを確認しています。
 ちなみに、ボタン要素がページ内に複数あるときは、
 
 ``` typescript
@@ -238,7 +245,7 @@ test('ログインページのテスト', () => {
 先ほど書いたように`getBy`はgetできなかったときはエラーを吐くため、`getBy`を使うと`screen.getByText(/[0-9]文字以上で入力してください/)`の部分ですでにテストが失敗するため、エラーメッセージが無いということが確かめられません。
 そのため、取得する要素が存在しなくてもエラーを吐かない`queryBy`の方を使っています。
 
-さて、改めて上のコードを見ると、
+さて、改めてここまでのコードを読むと、
 
 ``` typescript
 screen.getByRole('button')
@@ -246,7 +253,7 @@ screen.getByText(/[0-9]文字以上で入力してください/)
 screen.getByLabelText(/パスワード/)
 ```
 
-などの部分が、3回も4回も出てきて非常に読みづらい感じがしませす。
+などの部分が、3回も4回も出てきて非常に読みづらい感じがします。
 `testing-library-selector`を使って綺麗にしていきます。
 
 ``` shell
@@ -467,6 +474,23 @@ await waitFor(() => expect(spyUpdate).toHaveBeenCalledTimes(1));
 とすると、APIとのやりとりができていることが確認できます。
 非同期処理なのでもちろん`await`が必要です。
 
+また、エラーが起きたケースのテストのために、
+
+``` typescript
+ server.use(rest.post(`${process.env.REACT_APP_API_END_POINT}/profile`, (_, res, ctx) => res(ctx.status(500))));
+```
+
+として、APIのやりとりが失敗するように細工しています。
+
+``` typescript
+  const spy = jest.spyOn(console, 'error');
+  spy.mockImplementation(() => {});
+  ...
+  spy.mockRestore();
+```
+
+この3行はコンソールへのわざと出したエラーの出力を省き、テストの結果を読みやすくしています。
+
 fetchを使う場合は、ちょっと面倒くさいですが、以下のzennの本で丁寧に解説されていました。
 [React テスト応用、テストに悩む人へ](https://zenn.dev/tkdn/books/react-testing-patterns)
 
@@ -477,11 +501,10 @@ fetchを使う場合は、ちょっと面倒くさいですが、以下のzenn�
 例えばパスワードのバリデーションに使っている正規表現は、想定通りの動きをしているでしょうか？
 次はその辺りをテストしていきます。
 
-このままReactTestingLibraryを使ってテストしても良いのですが、細かい部分をテストするにはReactTestingLibraryよりJestの方が適しています。
-UIの絡まないロジック部分の検証には、実行速度の速いJestを使っていきたいです。
+このままReactTestingLibraryを使ってテストしても良いのですが、細かい部分をテストするにはReactTestingLibraryよりJestの方が適しています。やはりUIの絡まないロジック部分の検証には、実行速度の速いJestを使っていきたいです。
 テストを書いていきます。
 
-その前にます、ログインのバリデーションのスキーマは以下のようにyupを使って書かれています。
+ログインのバリデーションのスキーマは以下のようにyupを使って書かれています。
 
 ``` typescript: loginSchema.ts
 import * as yup from 'yup';
@@ -501,7 +524,7 @@ export const loginSchema: SchemaOf<LoginFormValues> = yup.object().shape({
 });
 ```
 
-これを検証していきたいです。
+これを検証します。
 
 ``` typescript: loginSchema.test.ts
 import cases from 'jest-in-case';
@@ -590,7 +613,7 @@ cases(
 
 JestとReactTestingLibraryを使ってテストを書いていきました。
 何をテストするかによってJestとReactTestingLibraryを使い分けていくと、より快適になります。
-長くなってしまったので、ユーザー一覧ページのテストは省略しましたが、コードはこちらに置いてあります。
+長くなってしまったので、ユーザー一覧ページのテストは省略しましたが、コードは[こちら](https://github.com/t-keshi/react-test-lion)に置いてあります。
 最後までお読みいただきました。
 
 ## 参考
