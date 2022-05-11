@@ -526,7 +526,7 @@ export const loginSchema: SchemaOf<LoginFormValues> = yup.object().shape({
 
 これを検証します。
 
-``` typescript: loginSchema.test.ts
+```typescript: loginSchema.test.ts
 import cases from 'jest-in-case';
 import { loginSchema } from './loginSchema';
 
@@ -545,11 +545,11 @@ test('異常(@がない)', async () => {
 
 このまま書いていってもいいのですが、見通しが悪くなりそうなのでatlassianの`jest-in-case`を使うのがおすすめです。
 
-``` shell
+```shell
 yarn add -D jest-in-case
 ```
 
-``` typescript: loginForm.ts
+```typescript: loginForm.ts
 import cases from 'jest-in-case';
 import { loginSchema } from './useLoginForm';
 
