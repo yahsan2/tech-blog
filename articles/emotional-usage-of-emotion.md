@@ -246,7 +246,7 @@ const Card = styled.div(props => ({
 }))
 ```
 
-`Card`コンポーネントの中にデフォルトのスタイルを書いておいて、上書きしたいところだけ、uiを使う側のコンポーネントで書くようにすれば、ずっとスッキリ書くことができます。これ例だと、Cardを使う側では`minWidth`しか書く必要がなく、記述量が格段に少なくなっています。
+uiコンポーネントの中にデフォルトのスタイルを書いておいて、上書きしたいところだけ、uiを使う側のコンポーネントで書くようにすれば、ずっとスッキリ書くことができます。この例だと、Cardを使う側では`minWidth`しか書く必要がなく、記述量が格段に少なくなっています。
 
 極端な話ですが、
 
@@ -267,7 +267,7 @@ const Card = styled.div(props => ({
 >
 ```
 
-となってしまっては、非常に見にくいです。これをやるくらいなら、インラインではなくcssを分離した方がまだマシです。言い換えると、インラインで書くには、インラインで書きやすいようにデフォルトのスタイルを十分に持った多彩なコンポーネントを用意しておく必要があります。
+となってしまっては、非常に見にくいです。これをやるくらいなら、インラインではなくcssを分離した方がマシです。言い換えると、インラインで書くには、インラインで書きやすいようにデフォルトのスタイルを十分に持った多彩なコンポーネントを用意しておく必要があります。
 
 [ChakraUI](https://chakra-ui.com/)には、Layoutのためのコンポーネントだけで、`AspectRatio`, `Box`, `Center`, `Container`, `Flex`, `Grid`, `SimpleGrid`, `Stack`, `Wrap`と９つもあります。これくらい品揃えが豊富だと、ほとんどスタイルを書かなくても画面が組めるので、スピーディーに開発することができます。
 
@@ -299,7 +299,7 @@ type TypographyProps = {
   fontSize: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   inline?: boolean;
   textAlign?: React.CSSProperties['textAlign'];
-} & { theme: Theme };
+};
 
 const fontSizes = {
   xs: "0.75rem",
@@ -312,6 +312,7 @@ const fontSizes = {
 const Typography = styled.p((props: TypographyProps) => ({
   fontSize: fontSizes[props.fontSize],
   display: props.inline ? 'inline' : 'block',
+  textAlign: props.textAlign
 }));
 ```
 
@@ -367,14 +368,14 @@ typescriptの場合は、別途、[themeをdeclare](https://emotion.sh/docs/type
 
 そして、このthemeを使って次のように書くことができます。`variant`の次いでに、`color`もthemeを使って指定できるようにしてみました。
 
-``` typescript
+```typescript
 type TypographyProps = {
   variant: 'h1' | 'h2' | 'h3';
   color: 'text.primary' | 'text.secondary';
 } & { theme: Theme };
 
 
-const generateFontColor = (theme: Theme) => ({
+const generateFontColors = (theme: Theme) => ({
   'text.primary': theme.palette.text.primary,
   'text.secondary': theme.palette.text.secondary,
 });
@@ -384,7 +385,7 @@ const Typography = styled.p((props: TypographyProps) => {
 
   return {
     ...theme.typography[variant],
-    color: generateFontColor(theme)[color],
+    color: generateFontColors(theme)[color],
   };
 });
 ```
