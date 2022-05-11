@@ -2,7 +2,7 @@
 title: '君のemotionを解き放て！－CSSinJSの歩き方－'
 emoji: '👩‍🎤'
 type: 'tech'
-topics: [react, emotion, CSSinJS, styledcomponents]
+topics: [react, emotion, css, styledcomponents]
 published: true
 ---
 
