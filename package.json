@@ -38,7 +38,7 @@
     "react-helmet": "^6.1.0",
     "typeface-merriweather": "0.0.72",
     "typeface-montserrat": "0.0.75",
-    "zenn-cli": "^0.1.98"
+    "zenn-cli": "^0.1.110"
   },
   "devDependencies": {
     "@types/prettier": "~2.4.1",
